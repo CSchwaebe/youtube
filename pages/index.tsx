@@ -1,6 +1,11 @@
 import Head from 'next/head'
 import clientPromise from '../lib/mongodb'
 import type { InferGetServerSidePropsType, GetServerSideProps } from 'next'
+import { useEffect, useState } from 'react'
+import Wagmi from './wagmi'
+import ClientOnly from './clientOnly'
+import Wallet from './wallet'
+
 
 type ConnectionStatus = {
   isConnected: boolean
@@ -34,76 +39,58 @@ export const getServerSideProps: GetServerSideProps<
 export default function Home({
   isConnected,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+  const [players, setPlayers] = useState([])
+
+  useEffect(() => {
+    (async () => {
+      const results = await fetch('/api/bootstrap');
+      const resultsJson = await results.json();
+      setPlayers(resultsJson);
+    })();
+  }, []);
+
   return (
-    <div className="container">
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <div>
+      <ClientOnly>
+        <Wallet />
+      </ClientOnly>
+      
 
-      <main>
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
-        </h1>
+      <div className="container">
+        <Head>
+          <title>Create Next App</title>
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
 
-        {isConnected ? (
-          <h2 className="subtitle">You are connected to MongoDB</h2>
-        ) : (
-          <h2 className="subtitle">
-            You are NOT connected to MongoDB. Check the <code>README.md</code>{' '}
-            for instructions.
-          </h2>
-        )}
+        <main>
+          <h1 className="title">
+            Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
+          </h1>
 
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
+          <div className="grid">
+            {players.map((player: any) => (
+              <div className="card" key={player._id}>
+                <h2>{player.display_name}</h2>
+                <p> {player.now_cost}</p>
+              </div>
+            ))}
+          </div>
 
-        <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
 
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
+        </main>
 
+        <footer>
           <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
+            href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
-            className="card"
           >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
+            Powered by{' '}
+            <img src="/vercel.svg" alt="Vercel Logo" className="logo" />
           </a>
-        </div>
-      </main>
+        </footer>
 
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className="logo" />
-        </a>
-      </footer>
-
-      <style jsx>{`
+        <style jsx>{`
         .container {
           min-height: 100vh;
           padding: 0 0.5rem;
@@ -238,7 +225,7 @@ export default function Home({
         }
       `}</style>
 
-      <style jsx global>{`
+        <style jsx global>{`
         html,
         body {
           padding: 0;
@@ -252,6 +239,9 @@ export default function Home({
           box-sizing: border-box;
         }
       `}</style>
+      </div>
+      
     </div>
+
   )
 }
